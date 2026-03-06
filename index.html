@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bingo Selection Page</title>
+  <style>
+    :root {
+      --neon-purple: #bc13fe;
+      --neon-cyan: #05ffa1;
+      --neon-pink: #ff0055;
+      --dark-bg: #0a0a0c;
+      --glass: rgba(255, 255, 255, 0.05);
+    }
+
+    body { 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      text-align: center; 
+      margin: 0; 
+      padding: 0; 
+      background-color: var(--dark-bg);
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(188, 19, 254, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(5, 255, 161, 0.1) 0%, transparent 40%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Top Bar - Neon Glassmorphism */
+    .top-bar { 
+      display: flex; 
+      justify-content: space-around; 
+      background: rgba(0, 0, 0, 0.6); 
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      color: #fff; 
+      padding: 15px 0; 
+      flex-wrap: wrap; 
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar div { 
+      padding: 10px 25px; 
+      background: var(--glass); 
+      border: 1px solid var(--neon-cyan);
+      border-radius: 12px; 
+      font-weight: bold; 
+      margin: 5px; 
+      box-shadow: 0 0 10px rgba(5, 255, 161, 0.2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    #countdown { 
+      border-color: var(--neon-pink); 
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+      color: var(--neon-pink);
+    }
+
+    h1 {
+      margin: 30px 0;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      background: linear-gradient(to right, var(--neon-cyan), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 5px rgba(188, 19, 254, 0.5));
+    }
+
+    /* Grid of 200 buttons */
+    #cartelle-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, 45px); 
+      grid-gap: 8px; 
+      justify-content: center; 
+      margin: 20px auto;
+      max-width: 1100px;
+      padding: 20px;
+      background: var(--glass);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .cartella-button { 
+      width: 45px; 
+      height: 45px; 
+      background: #1a1a1e; 
+      color: #888;
+      border: 1px solid #333; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cartella-button:hover {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(5, 255, 161, 0.4);
+    }
+
+    .cartella-button.selected { 
+      background: var(--neon-purple); 
+      color: white;
+      border-color: #fff;
+      box-shadow: 0 0 20px var(--neon-purple);
+      transform: scale(1.1);
+      z-index: 2;
+    }
+
+    /* Preview Section */
+    #selected-cartelle-preview { 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+      gap: 25px; 
+      margin: 40px 0;
+      padding-bottom: 50px;
+    }
+
+    .cartella-preview { 
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--neon-purple); 
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .cartella-preview table { border-collapse: collapse; }
+
+    .cartella-preview td { 
+      width: 40px; 
+      height: 40px; 
+      text-align: center; 
+      border: 1px solid rgba(188, 19, 254, 0.2); 
+      font-weight: bold; 
+      color: var(--neon-cyan);
+      font-size: 0.9rem;
+    }
+
+    .free { 
+      background: var(--neon-pink) !important; 
+      color: white !important; 
+      font-size: 0.7rem !important;
+      text-shadow: 0 0 5px #fff;
+    }
+
+    /* Scrollbar for Dark Mode */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0c; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div id="countdown">Time Left: 15s</div>
+  <div id="balance">💰 Balance: 100</div>
+  <div id="stake">🎟 Stake: 10</div>
+  <div id="derash">🔥 Derash: --</div>
+</div>
+
+<h1>Choose Your Luck</h1>
+<p style="color: #888; margin-top: -20px;">Pick up to 5 cards to enter the game</p>
+
+<div id="cartelle-grid"></div>
+
+<div id="selected-cartelle-preview"></div>
+
+<script>
+// Logic remains identical as requested
+const selectedCartelle = [];
+let cartelleData = [];
+
+// ------------------- Fetch cartelle ------------------- //
+fetch(`/api/cartelle`)
+  .then(r=>r.json())
+  .then(data=>{
+    cartelleData = data; 
+    renderCartelleGrid();
+  })
+  .catch(err=>console.error(err));
+
+// ------------------- Render 200 cartelle buttons ------------------- //
+const grid = document.getElementById("cartelle-grid");
+function renderCartelleGrid(){
+  grid.innerHTML = "";
+  cartelleData.forEach(cart=>{
+    const btn = document.createElement("button");
+    btn.className = "cartella-button";
+    btn.innerText = cart.id;
+    btn.onclick = () => toggleCartellaSelection(cart, btn);
+    grid.appendChild(btn);
+  });
+}
+
+// ------------------- Selection logic ------------------- //
+function toggleCartellaSelection(cart, btn){
+  const idx = selectedCartelle.findIndex(c=>c.id===cart.id);
+  if(idx>=0){ 
+    selectedCartelle.splice(idx,1); 
+    btn.classList.remove("selected"); 
+  } else {
+    if(selectedCartelle.length>=5){ 
+      btn.style.animation = "shake 0.2s ease-in-out"; // tiny visual feedback
+      alert("Max 5 cartelle"); 
+      return; 
+    }
+    selectedCartelle.push(cart); 
+    btn.classList.add("selected");
+  }
+  renderSelectedCartellePreview();
+  updateDerash();
+}
+
+// ------------------- Render selected cartelle preview ------------------- //
+const previewDiv = document.getElementById("selected-cartelle-preview");
+function renderSelectedCartellePreview(){
+  previewDiv.innerHTML = "";
+  selectedCartelle.forEach(cart=>{
+    const div = document.createElement("div");
+    div.className="cartella-preview";
+    const table = document.createElement("table");
+    for(let i=0;i<5;i++){
+      const row = table.insertRow();
+      for(let j=0;j<5;j++){
+        const cell = row.insertCell();
+        const n = cart.numbers[i*5+j];
+        cell.innerText = (i===2 && j===2) ? "FREE" : n;
+        if(i===2 && j===2) cell.className="free";
+      }
+    }
+    div.appendChild(table);
+    previewDiv.appendChild(div);
+  });
+}
+
+// ------------------- Update Derash ------------------- //
+function updateDerash(){
+  const derash = (selectedCartelle.length*10*0.7).toFixed(2);
+  document.getElementById("derash").innerText = "Derash: "+derash;
+}
+
+// ------------------- Top Bar Countdown ------------------- //
+let countdown = 15;
+const countdownEl = document.getElementById("countdown");
+const interval = setInterval(()=>{
+  countdownEl.innerText = "Time Left: " + countdown + "s";
+  countdown--;
+  if(countdown<0){
+    clearInterval(interval);
+    const cartellaIds = selectedCartelle.map(c=>c.id).join(",");
+    const userId = 1; 
+    window.location.href = `/game.html?userId=${userId}&cartellaIds=${cartellaIds}`;
+  }
+},1000);
+</script>
+
+</body>
+</html>

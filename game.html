@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bingo Game Mode</title>
+  <style>
+    :root {
+          --bg: linear-gradient(135deg, #0d001a, #1a0033, #000d1a);
+      --glass:     rgba(240, 237, 245, 0.18);
+      --glass2:    rgba(60, 40, 100, 0.26);
+      --border:    rgba(180, 140, 255, 0.28);
+      --accent:    #c084fc;
+      --accent-glow:#c084fc66;
+      --pulse-glow:#d8b4fe88;
+      --text:      #f0e8ff;
+      --text2:     #d0c0ff;
+    }
+
+    body {
+      margin:0;
+      padding:0;
+      min-height:100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, "Segoe UI", sans-serif;
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 28px;
+      padding: 16px 10px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 6px 25px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .top-bar div {
+      padding: 10px 22px;
+      background: var(--glass2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      color: var(--text2);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top-bar div::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(192,132,252,0.15) 50%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform 0.7s ease;
+    }
+
+    .top-bar div:hover::before { transform: translateX(120%); }
+    .top-bar div:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+
+    /* ─── Latest big pulsing ball ──────────────────────────────── */
+    #latest-ball {
+      width: 110px;
+      height: 110px;
+      margin: 24px auto 16px;
+      background: 
+        radial-gradient(circle at 30% 30%, rgba(235, 136, 44, 0.35), transparent 60%),
+        linear-gradient(135deg, #2fa071, #9af0c1, #21d4e0);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 900;
+      color: #140033;
+      text-shadow: 0 2px 10px #0008;
+      box-shadow: 
+        0 0 50px var(--pulse-glow),
+        inset 0 4px 16px rgba(255,255,255,0.3),
+        0 10px 35px #000a;
+      border: 3px solid rgba(255,255,255,0.25);
+      animation: pulse-grow 2.4s infinite ease-in-out, appear 0.8s ease-out;
+    }
+
+    @keyframes pulse-grow {
+      0%, 100% { transform: scale(1);   box-shadow: 0 0 50px var(--pulse-glow); }
+      50%      { transform: scale(1.12); box-shadow: 0 0 80px #d8b4fecc; }
+    }
+
+    @keyframes appear {
+      0% { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+      70% { transform: scale(1.15) rotate(4deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    #called-numbers {
+      min-height: 80px;
+      margin: 0 auto 40px;
+      max-width: 960px;
+      padding: 0 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px 14px;
+    }
+
+    #called-numbers span {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.28rem;
+      color: var(--text2);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+      transition: all 0.4s ease;
+    }
+
+    #called-numbers span.is-latest {
+      background: linear-gradient(135deg, #a78bfa, #c084fc, #e0bbff);
+      color: #1a0033;
+      transform: scale(1.22);
+      box-shadow: 0 0 32px var(--accent-glow);
+      border-color: #d8b4fe66;
+    }
+
+    h1 {
+      margin: 20px 0 40px;
+      font-size: 3.4rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      background: linear-gradient(90deg, #d8b4fe, #c084fc, #a78bfa, #c084fc, #d8b4fe);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 4px 25px rgba(160,100,255,0.6);
+      animation: title-shimmer 6s linear infinite;
+    }
+
+    @keyframes title-shimmer {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: -200% 50%; }
+    }
+
+    /* ─── rest of your styles unchanged ────────────────────────── */
+    #selected-cartelle {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px 40px;
+      margin: 20px auto 70px;
+      max-width: 1440px;
+      padding: 0 20px;
+    }
+
+    .cartella-preview {
+      background: var(--glass);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px 22px 26px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cartella-preview::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      background: radial-gradient(circle at 30% 30%, rgba(192,132,252,0.12) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.8s ease;
+      pointer-events: none;
+      transform: translate(-20%, -20%);
+    }
+
+    .cartella-preview:hover::before {
+      opacity: 1;
+      transform: translate(30%, 30%);
+    }
+
+    .cartella-preview:hover {
+      transform: translateY(-14px) scale(1.04) rotateX(4deg) rotateY(6deg);
+      box-shadow: 0 25px 70px rgba(120,80,220,0.45);
+    }
+
+    .cartella-id {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--accent);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+      transition: all 0.4s ease;
+    }
+
+    .cartella-preview:hover .cartella-id {
+      transform: scale(1.08);
+      text-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .cartella-preview table {
+      border-collapse: collapse;
+      background: rgba(20,10,50,0.4);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .cartella-preview td {
+      width: 54px;
+      height: 54px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      border: 1px solid rgba(200,160,255,0.2);
+      color: var(--text2);
+      background: rgba(0,0,0,0.28);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .cartella-preview td::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .cartella-preview td:hover::after { opacity: 1; }
+
+    .marked {
+      background: linear-gradient(135deg, #6ee7b7, #34d399, #10b981) !important;
+      color: #0f2e1a !important;
+      transform: scale(1.15) translateZ(10px);
+      box-shadow: 0 0 28px #6ee7b790;
+      font-weight: 900;
+      animation: marked-pop 0.6s ease-out;
+    }
+
+    @keyframes marked-pop {
+      0%   { transform: scale(0.8) translateZ(0); }
+      60%  { transform: scale(1.28) translateZ(15px); }
+      100% { transform: scale(1.15) translateZ(10px); }
+    }
+
+    .free {
+      background: linear-gradient(135deg, #fcd34d, #fbbf24, #f59e0b) !important;
+      color: #3b2a00 !important;
+      font-weight: 900;
+      text-shadow: 0 2px 8px #0008;
+      animation: free-glow 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes free-glow {
+      0%   { box-shadow: 0 0 10px #fbbf2460; }
+      100% { box-shadow: 0 0 30px #fcd34db0; }
+    }
+
+    @media (max-width: 720px) {
+      h1 { font-size: 2.5rem; margin: 18px 0 28px; }
+      .cartella-preview td { width: 46px; height: 46px; font-size: 1.25rem; }
+      #called-numbers span { width: 40px; height: 40px; font-size: 1.1rem; }
+      #latest-ball { width: 90px; height: 90px; font-size: 2.6rem; margin: 20px auto 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div id="top-balance">Balance: 100</div>
+  <div id="top-stake">Stake: 10</div>
+  <div id="top-derash">Derash: --</div>
+  <div id="top-calls">Calls: 0</div>
+</div>
+
+<div id="latest-ball">–</div>
+
+<!-- Called numbers history -->
+<div id="called-numbers"></div>
+
+
+<div id="selected-cartelle"></div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const userId = parseInt(urlParams.get("userId") || 1);
+const cartellaIds = (urlParams.get("cartellaIds")||"").split(",").map(Number);
+
+let selectedCartelle = [];
+let calledNumbers = [];
+const stake = 10;
+let balance = 100;
+
+// ------------------- Fetch selected cartelle from backend ------------------- //
+fetch(`/api/cartelle`)
+  .then(r=>r.json())
+  .then(data=>{
+    selectedCartelle = data.filter(c => cartellaIds.includes(c.id));
+    renderSelectedCartelle();
+    updateDerash();
+  })
+  .catch(err=>console.error(err));
+
+// ------------------- Mark called numbers -------------------
+function markCalledNumbers(){
+  container.querySelectorAll(".cartella-preview").forEach((previewDiv, idx)=>{
+    const cart = selectedCartelle[idx];
+    const cells = previewDiv.querySelectorAll("td");
+    cells.forEach((cell,i)=>{
+      if(cell.innerText!=="FREE" && calledNumbers.includes(parseInt(cell.innerText))){
+        cell.classList.add("marked");
+      }
+    });
+  });
+}
+
+// ------------------- Render selected cartelle -------------------
+const container = document.getElementById("selected-cartelle");
+function renderSelectedCartelle(){
+  container.innerHTML = "";
+  selectedCartelle.forEach(cart=>{
+    const div = document.createElement("div");
+    div.className="cartella-preview";
+
+    const idDiv = document.createElement("div");
+    idDiv.className="cartella-id";
+    idDiv.innerText = "Cartella ID: "+cart.id;
+    div.appendChild(idDiv);
+
+    const table = document.createElement("table");
+    for(let i=0;i<5;i++){
+      const row = table.insertRow();
+      for(let j=0;j<5;j++){
+        const cell = row.insertCell();
+        const n = cart.numbers[i*5+j];
+        cell.innerText = (i===2 && j===2) ? "FREE" : n;
+        if(i===2 && j===2) cell.className="free";
+      }
+    }
+    div.appendChild(table);
+    container.appendChild(div);
+  });
+}
+
+// ------------------- Called numbers display -------------------
+const calledNumbersContainer = document.getElementById("called-numbers");
+const latestBall = document.getElementById("latest-ball");
+
+function renderCalledNumbers(){
+  calledNumbersContainer.innerHTML = "";
+  calledNumbers.forEach((n, i) => {
+    const span = document.createElement("span");
+    span.innerText = n;
+    if (i === calledNumbers.length - 1) {
+      span.classList.add("is-latest");
+      latestBall.innerText = n;
+    }
+    calledNumbersContainer.appendChild(span);
+  });
+}
+
+// ------------------- Top bar -------------------
+function updateDerash(){
+  const derash = (selectedCartelle.length*stake*0.7).toFixed(2);
+  document.getElementById("top-derash").innerText = "Derash: "+derash;
+}
+
+// ------------------- Bingo check -------------------
+let winnerAnnounced = false;
+function checkBingo(){
+  for(let cart of selectedCartelle){
+    const grid = [];
+    for(let i=0;i<5;i++){
+      grid[i]=cart.numbers.slice(i*5,(i+1)*5).map(n=> n===0 || calledNumbers.includes(n) ? 1 : 0);
+    }
+    let winningPattern = null;
+    // Check rows
+    for(let r=0;r<5;r++) if(grid[r].every(v=>v===1)) winningPattern = {type:"row", index:r};
+    // Check columns
+    for(let c=0;c<5;c++) if(grid.every(row=>row[c]===1)) winningPattern = {type:"column", index:c};
+    // Check diagonals
+    if(grid.every((row,i)=>row[i]===1)) winningPattern = {type:"diagonal", which:"\\\"\\\""};
+    if(grid.every((row,i)=>row[4-i]===1)) winningPattern = {type:"diagonal", which:"/"}; 
+
+    if(winningPattern && !winnerAnnounced){
+      winnerAnnounced = true;
+      showWinnerPage(cart, winningPattern);
+    }
+  }
+}
+
+// ------------------- Show winner page -------------------
+function showWinnerPage(cart, pattern){
+  const winnerData = {
+    cartella: cart,
+    pattern: pattern
+  };
+  localStorage.setItem("winnerData", JSON.stringify(winnerData));
+  localStorage.setItem("calledNumbers", JSON.stringify(calledNumbers));
+  window.location.href = "/winner.html";
+}
+
+// ------------------- Demo: Call numbers every second -------------------
+let allNumbers = Array.from({length:75},(_,i)=>i+1).sort(()=>Math.random()-0.5);
+let idx=0;
+const topCalls = document.getElementById("top-calls");
+renderSelectedCartelle();
+
+const interval = setInterval(()=>{
+  if(idx>=allNumbers.length){ clearInterval(interval); return; }
+  const n = allNumbers[idx++];
+  calledNumbers.push(n);
+  topCalls.innerText = "Calls: "+calledNumbers.length;
+  renderCalledNumbers();
+  markCalledNumbers();
+  checkBingo();
+},1000);
+</script>
+</body>
+</html>

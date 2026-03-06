@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bingo Winner!</title>
+  <style>
+    :root {
+      --glass: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --accent: #00f2fe;
+      --winner-gold: #ffd700;
+    }
+
+    body { 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      text-align: center; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      color: white;
+      overflow: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .glass-card {
+      background: var(--glass);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      max-width: 90%;
+    }
+
+    h1 { 
+      font-size: clamp(2rem, 8vw, 4rem); 
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      color: #fff;
+      animation: pulse 2s infinite;
+    }
+
+    .winner-info { 
+      margin-bottom: 25px; 
+      font-size: 1.2rem; 
+      letter-spacing: 1px;
+      opacity: 0.9;
+    }
+
+    /* Table Styles */
+    table { 
+      border-collapse: separate; 
+      border-spacing: 8px; 
+      margin: 20px auto; 
+    }
+
+    td { 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 20px;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    td.marked { 
+      background: rgba(255, 255, 255, 0.3); 
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    td.free { 
+      background: var(--winner-gold) !important; 
+      color: #333; 
+      transform: scale(1.05);
+    }
+
+    td.winning { 
+      background: #ff4ef5 !important; 
+      box-shadow: 0 0 20px #ff4ef5;
+      border: none;
+      animation: winnerScale 0.6s infinite alternate;
+      z-index: 10;
+    }
+
+    #pattern { 
+      font-size: 18px; 
+      margin-top: 20px; 
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 50px;
+      display: inline-block;
+    }
+
+    #countdown { 
+      margin-top: 30px; 
+      font-weight: 300;
+      font-style: italic;
+      opacity: 0.8;
+    }
+
+    /* Animations */
+    @keyframes popIn { 
+      from { transform: scale(0.8); opacity: 0; } 
+      to { transform: scale(1); opacity: 1; } 
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+      50% { transform: scale(1.05); text-shadow: 0 0 30px rgba(255,255,255,0.5); }
+      100% { transform: scale(1); text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+    }
+
+    @keyframes winnerScale {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    /* Confetti (JS generated) */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      top: -10px;
+      z-index: -1;
+      animation: fall 3s linear forwards;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(100vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="glass-card">
+  <h1>BINGO!</h1>
+  <div class="winner-info" id="winner-id"></div>
+  
+  <div id="cartella-container"></div>
+  
+  <div id="pattern"></div>
+  <div id="countdown"></div>
+</div>
+
+<script>
+// --- LOGIC PRESERVED ---
+const winnerData = JSON.parse(localStorage.getItem("winnerData") || "{}");
+const calledNumbers = JSON.parse(localStorage.getItem("calledNumbers") || "[]");
+
+if(!winnerData.cartella){ 
+  document.body.innerHTML = "<div class='glass-card'><h1>No winner data found</h1></div>"; 
+} else {
+  // Show winner cartella ID
+  document.getElementById("winner-id").innerText = "Cartella #"+winnerData.cartella.id;
+
+  // Render cartella
+  const container = document.getElementById("cartella-container");
+  const table = document.createElement("table");
+  
+  winnerData.cartella.numbers.forEach((n,i)=>{
+    const rowIdx = Math.floor(i/5);
+    if(!table.rows[rowIdx]) table.insertRow();
+    const row = table.rows[rowIdx];
+    const cell = row.insertCell();
+    cell.innerText = (i===12) ? "★" : n; // star for free
+    if(i===12) cell.className="free";
+
+    if(calledNumbers.includes(n) || i===12) cell.classList.add("marked");
+
+    const pattern = winnerData.pattern;
+    if(pattern){
+      if(pattern.type==="row" && rowIdx===pattern.index) cell.classList.add("winning");
+      if(pattern.type==="column" && (i%5)===pattern.index) cell.classList.add("winning");
+      if(pattern.type==="diagonal"){
+        // Handling the escaped slash characters in your original string
+        if((pattern.which.includes("\\") || pattern.which === "main") && i%6===0) cell.classList.add("winning");
+        if(pattern.which==="/" && [4,8,12,16,20].includes(i)) cell.classList.add("winning");
+      }
+    }
+  });
+  container.appendChild(table);
+
+  // Beautify pattern text
+  const patternType = winnerData.pattern ? winnerData.pattern.type.toUpperCase() : "NONE";
+  document.getElementById("pattern").innerText = "Winning Pattern: " + patternType;
+
+  // Countdown
+  let countdown = 8;
+  const countdownEl = document.getElementById("countdown");
+  const interval = setInterval(()=>{
+    countdownEl.innerText = "Next round begins in "+countdown+"s";
+    countdown--;
+    if(countdown<0){
+      clearInterval(interval);
+      window.location.href="/"; 
+    }
+  }, 1000);
+
+  // Bonus: Simple Confetti Effect
+  for(let i=0; i<50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.backgroundColor = ['#fff', '#ffd700', '#ff4ef5', '#00f2fe'][Math.floor(Math.random()*4)];
+    confetti.style.animationDelay = Math.random() * 3 + 's';
+    document.body.appendChild(confetti);
+  }
+}
+</script>
+</body>
+</html>
